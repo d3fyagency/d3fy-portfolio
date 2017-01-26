@@ -2,7 +2,7 @@
 /**
  * Plugin Name: D3FY Portfolio
  * Description: Adds a Portfolio Post Type with grid display and category filtering
- * Version:     1.0.1
+ * Version:     1.1.0
  * Author:      D3FY Development
  * Author URI:  https://www.d3fy.com/
  * Text Domain: d3fy-portfolio
