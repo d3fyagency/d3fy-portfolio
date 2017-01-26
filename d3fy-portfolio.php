@@ -61,7 +61,7 @@ class D3FY_Portfolio_Plugin
     public function load_frontend_libraries()
     {
         wp_enqueue_style('d3fy-portfolio-default-style',
-          plugins_url('assets/css/style.css', __FILE__));
+          plugins_url('assets/css/d3fy-portfolio-style.css', __FILE__));
 
         wp_enqueue_script(
           'd3fy-portfolio-masonry-script',
