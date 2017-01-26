@@ -69,7 +69,7 @@ class D3FY_Portfolio_Plugin
       );
 
         wp_register_script('d3fy-portfolio-custom-script',
-          plugins_url('assets/js/custom.js', __FILE__), array('jquery'), D3FY_PORTFOLIO_VERSION, true);
+          plugins_url('assets/js/d3fy-portfolio-script.js', __FILE__), array('jquery'), D3FY_PORTFOLIO_VERSION, true);
 
         wp_localize_script('pluginSetting', $params);
         wp_enqueue_script('d3fy-portfolio-custom-script');
