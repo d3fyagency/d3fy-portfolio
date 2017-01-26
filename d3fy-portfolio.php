@@ -42,13 +42,13 @@ class D3FY_Portfolio_Plugin
 
     public function d3fy_portfolio_init()
     {
-        add_shortcode('d3fy', array($this, 'tru_func'));
+        add_shortcode('d3fy', array($this, 'd3fy_portfolio_func'));
         add_action('wp_enqueue_scripts', array($this, 'load_frontend_libraries'));
-        add_filter('shortcode_atts_gallery', array($this, 'tru_gallery_atts'), 10, 3);
-        add_action('admin_enqueue_scripts', array($this, 'tru_admin_enqueue'));
+        add_filter('shortcode_atts_gallery', array($this, 'd3fy_portfolio_gallery_atts'), 10, 3);
+        add_action('admin_enqueue_scripts', array($this, 'd3fy_portfolio_admin_enqueue'));
     }
 
-    public function tru_func($atts)
+    public function d3fy_portfolio_func($atts)
     {
         extract(shortcode_atts(array(
             'featured' => '',
@@ -85,7 +85,7 @@ class D3FY_Portfolio_Plugin
         $disableClicking = '';
         $rand_index = rand();
 
-        $tru_meta = array();
+        $d3fy_portfolio_meta = array();
         $lists = array();
         $paramCustom = array();
         $categoryMenu = array();
@@ -127,7 +127,7 @@ class D3FY_Portfolio_Plugin
 
             $i = rand();
 
-            $tru_meta = get_post_meta(get_the_ID());
+            $d3fy_portfolio_meta = get_post_meta(get_the_ID());
 
             $temp_cat_cmp_array[] = get_the_terms(get_the_ID(), $taxonomy);
 
