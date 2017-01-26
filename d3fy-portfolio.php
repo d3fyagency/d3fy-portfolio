@@ -42,7 +42,7 @@ class D3FY_Portfolio_Plugin
 
     public function d3fy_portfolio_init()
     {
-        add_shortcode('d3fy', array($this, 'd3fy_portfolio_func'));
+        add_shortcode('d3fy-portfolio', array($this, 'd3fy_portfolio_func'));
         add_action('wp_enqueue_scripts', array($this, 'load_frontend_libraries'));
         add_filter('shortcode_atts_gallery', array($this, 'd3fy_portfolio_gallery_atts'), 10, 3);
         add_action('admin_enqueue_scripts', array($this, 'd3fy_portfolio_admin_enqueue'));
