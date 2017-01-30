@@ -61,18 +61,6 @@ class D3fy_Portfolio_Public {
 	 */
 	public function enqueue_styles() {
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in D3fy_Portfolio_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The D3fy_Portfolio_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
 		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/d3fy-portfolio-public.css', array(), $this->version, 'all' );
 
 	}
@@ -84,20 +72,198 @@ class D3fy_Portfolio_Public {
 	 */
 	public function enqueue_scripts() {
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in D3fy_Portfolio_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The D3fy_Portfolio_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
+		wp_enqueue_script( $this->plugin_name . '-isotope', plugin_dir_url( __FILE__ ) . 'js/vendor/isotope.pkgd.min.js', array( 'jquery' ), $this->version, true );
+		wp_enqueue_script( $this->plugin_name . 'd3fy-portfolio-js', plugin_dir_url( __FILE__ ) . 'js/d3fy-portfolio-public.js', array( 'jquery' ), $this->version, true );
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/d3fy-portfolio-public.js', array( 'jquery' ), $this->version, false );
+	}
 
+	/**
+	 * Load custom template for portfolio single view
+	 *
+	 * @param string $template The template file path to load
+	 *
+	 * @return string The custom post type single template
+	 */
+	public function load_portfolio_template( $template ) {
+
+		$plugin_path   = plugin_dir_path( __FILE__ );
+		$template_name = 'single-d3fy-portfolio.php';
+		$full_path = $plugin_path . 'partials/' . $template_name;
+
+		if ( $template === get_theme_file_uri( $template_name ) || ! file_exists( $full_path ) ) {
+			return $template;
+		}
+
+		if ( 'd3fy_portfolio' == get_post_type() ) {
+			$template = $full_path;
+		}
+
+		return $template;
+	}
+
+	public function set_portfolio_shortcode(  ) {
+		add_shortcode( 'd3fy-portfolio', array( $this, 'portfolio_shortcode' ) );
+	}
+
+	public function portfolio_shortcode( $atts ) {
+		extract( shortcode_atts( array(
+			'featured' => '',
+			'all'      => '',
+			'showcat'  => '',
+		), $atts ) );
+
+		$disableClicking = '';
+		$rand_index      = rand();
+
+		$d3fy_portfolio_meta = array();
+		$lists               = array();
+		$paramCustom         = array();
+		$categoryMenu        = array();
+		// Filtered category list
+		$cat_lists  = array();
+		$type       = 'd3fy_portfolio';
+		$listHeader = '<div class="grid"><div class="grid-sizer"></div>';
+		$listFooter = '</div>';
+
+		$i = 1;
+
+		if ( $featured == 'true' ) {
+			$args = array(
+				'post_type'      => $type,
+				'post_status'    => 'publish',
+				'posts_per_page' => - 1,
+				'meta_query'     => array(
+					array(
+						'key'   => 'featured-checkbox',
+						'value' => 'yes',
+					),
+				),
+				'cache_results'  => false,
+			);
+		} else {
+			$args = array(
+				'post_type'      => $type,
+				'post_status'    => 'publish',
+				'posts_per_page' => - 1,
+				'cache_results'  => false,
+			);
+		}
+
+		$taxonomy   = 'd3fy_portfolio_category';
+		$image_code = '';
+		$my_query   = null;
+		$my_query   = new WP_Query( $args );
+
+		if ( $my_query->have_posts() ) {
+			while ( $my_query->have_posts() ) : $my_query->the_post();
+
+				$i = rand();
+
+				$d3fy_portfolio_meta = get_post_meta( get_the_ID() );
+
+				$temp_cat_cmp_array[] = get_the_terms( get_the_ID(), $taxonomy );
+
+				if ( count( $temp_cat_cmp_array ) != 0 && $temp_cat_cmp_array[0] != null ) {
+					foreach ( $temp_cat_cmp_array[0] as $cat_cmp ) {
+						$cmp_result = false;
+						if ( count( $cat_lists ) != 0 ) {
+							foreach ( $cat_lists as $cat_val ) {
+								if ( $cat_val == $cat_cmp ) {
+									$cmp_result = true;
+								}
+							}
+						}
+						if ( ! $cmp_result ) {
+							array_push( $cat_lists, $cat_cmp );
+						}
+					}
+				}
+
+				usort( $cat_lists, array( $this, 'sortByOrder' ) );
+
+				unset( $temp_cat_cmp_array );
+				$temp_cat_cmp_array = array();
+
+				$post_thumbnail_id = get_post_thumbnail_id( get_the_ID() );
+				$image             = wp_get_attachment_image_src( get_post_thumbnail_id( get_the_ID() ), 'full' );
+				$title             = get_the_title( $post_thumbnail_id );
+				$alt               = get_post_meta( $post_thumbnail_id, '_wp_attachment_image_alt', true );
+
+				if ( $image != '' ) {
+					$categories = get_the_terms( get_the_ID(), $taxonomy );
+					$cat_class  = '';
+					if ( $categories ) {
+						foreach ( $categories as $cat ) {
+							$cat_class = $cat_class . ' d3fy-' . $cat->slug;
+						}
+					}
+
+					$image_code = '<img src="' . $image[0] . '" style="width:100%" title="' . $title . '" alt="' . $alt . '" >';
+
+					$list = '<div class="d3fy-item ' . $cat_class . '"  data-category="' . $cat_class . '">
+                          <ul class="caption-style-1">
+                            <li>
+                              ' . $image_code . '
+                              <a href="' . get_post_permalink() . '" class="caption">
+                                <div class="blur"></div>
+                                <div class="caption-text">
+                                  <p>' . get_the_title() . '</p>
+                                </div>
+                              </a>
+                            </li>
+                          </ul>
+                        </div>';
+
+					array_push( $lists, $list );
+					++ $i;
+				}
+			endwhile;
+		}
+		wp_reset_query();
+
+		if ( count( $cat_lists ) != 0 ) {
+			$paramCustom = array(
+				'all'          => $all,
+				'initialClass' => $cat_lists[0]->slug,
+			);
+		} else {
+			$paramCustom = array(
+				'all'          => '1',
+				'initialClass' => '0',
+			);
+		}
+
+		if ( $all == 'true' && count( $cat_lists ) != 0 ) {
+			$categoryMenu[] = '<li><a class="d3fy-button current d3fy-button-' . $rand_index . '" data-filter="*">All</a></li>';
+		}
+
+		if ( count( $cat_lists ) != 0 ) {
+			foreach ( $cat_lists as $term_cat ) {
+				$categoryMenu[] = '<li><a class="d3fy-button" data-filter=".d3fy-' . $term_cat->slug . '">' . ucfirst( $term_cat->name ) . '</a></li>';
+			}
+		}
+
+		wp_localize_script( $this->plugin_name . 'd3fy-portfolio-js', 'pluginSetting', $paramCustom );
+
+		if ( $showcat == 'true' ) {
+			$catMenu = '<div class="portfolio-filters-inline"><ul style="margin-left: 30px;">' . implode( '', $categoryMenu ) . '</ul></div>';
+		} else {
+			$catMenu = '';
+		}
+
+		return '' . $catMenu . '' . $listHeader . '' . implode( '', $lists ) . '' . $listFooter . '';
+	}
+
+	/**
+	 * Sort portfolio pieces
+	 *
+	 * @param $a
+	 * @param $b
+	 *
+	 * @return int
+	 */
+	public function sortByOrder( $a, $b ) {
+		return strcmp( $a->slug, $b->slug );
 	}
 
 }
