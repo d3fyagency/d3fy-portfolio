@@ -101,65 +101,50 @@ class D3fy_Portfolio_Public {
 		return $template;
 	}
 
+	/**
+	 * Setup up the shortcode
+	 *
+	 * @since 1.1.0
+	 */
 	public function set_portfolio_shortcode(  ) {
 		add_shortcode( 'd3fy-portfolio', array( $this, 'portfolio_shortcode' ) );
 	}
 
+	/**
+	 * Output the portfolio markup
+	 *
+	 * @since 1.1.0
+	 */
 	public function portfolio_shortcode( $atts ) {
 		extract( shortcode_atts( array(
-			'featured' => '',
+			'type'     => 'd3fy_portfolio',
 			'all'      => '',
 			'showcat'  => '',
+			'limit'    => '100'
 		), $atts ) );
 
-		$disableClicking = '';
 		$rand_index      = rand();
-
-		$d3fy_portfolio_meta = array();
 		$lists               = array();
-		$paramCustom         = array();
 		$categoryMenu        = array();
+
 		// Filtered category list
 		$cat_lists  = array();
-		$type       = 'd3fy_portfolio';
 		$listHeader = '<div class="grid"><div class="grid-sizer"></div>';
 		$listFooter = '</div>';
 
-		$i = 1;
-
-		if ( $featured == 'true' ) {
-			$args = array(
-				'post_type'      => $type,
-				'post_status'    => 'publish',
-				'posts_per_page' => - 1,
-				'meta_query'     => array(
-					array(
-						'key'   => 'featured-checkbox',
-						'value' => 'yes',
-					),
-				),
-				'cache_results'  => false,
-			);
-		} else {
-			$args = array(
-				'post_type'      => $type,
-				'post_status'    => 'publish',
-				'posts_per_page' => - 1,
-				'cache_results'  => false,
-			);
-		}
+		$args = array(
+			'post_type'      => $type,
+			'post_status'    => 'publish',
+			'posts_per_page' => $limit,
+			'cache_results'  => false,
+		);
 
 		$taxonomy   = 'd3fy_portfolio_category';
-		$image_code = '';
 		$my_query   = null;
 		$my_query   = new WP_Query( $args );
 
 		if ( $my_query->have_posts() ) {
 			while ( $my_query->have_posts() ) : $my_query->the_post();
-
-				$i = rand();
-
-				$d3fy_portfolio_meta = get_post_meta( get_the_ID() );
 
 				$temp_cat_cmp_array[] = get_the_terms( get_the_ID(), $taxonomy );
 
@@ -215,7 +200,6 @@ class D3fy_Portfolio_Public {
                         </div>';
 
 					array_push( $lists, $list );
-					++ $i;
 				}
 			endwhile;
 		}
