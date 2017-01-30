@@ -41,6 +41,24 @@ class D3fy_Portfolio_Admin {
 	private $version;
 
 	/**
+	 * The custom post type slug.
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 * @var      string $post_type_slug The slug used for the portfolio post type.
+	 */
+	private $post_type_slug;
+
+	/**
+	 * The custom post type label;
+	 *
+	 * @since    1.0.0
+	 * @access   private
+	 * @var      string $post_type_label The label used for the portfolio post type.
+	 */
+	private $post_type_label;
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -51,6 +69,9 @@ class D3fy_Portfolio_Admin {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+
+		$this->post_type_slug  = 'd3fy_portfolio';
+		$this->post_type_label = 'Portfolio';
 
 	}
 
@@ -97,6 +118,149 @@ class D3fy_Portfolio_Admin {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/d3fy-portfolio-admin.js', array( 'jquery' ), $this->version, false );
+
+	}
+
+	/**
+	 * Register portfolio custom post type.
+	 *
+	 * @since 1.1.0
+	 */
+	public function register_post_type() {
+
+		$post_type_slug = 'd3fy_portfolio';
+		$post_type_label = 'Portfolio';
+
+
+		$labels = array(
+			'name'               => __( $post_type_label, 'd3fy-portfolio' ),
+			'singular_name'      => __( $post_type_label . ' Item', 'd3fy-portfolio' ),
+			'add_new'            => __( 'Add New Item', 'd3fy-portfolio' ),
+			'add_new_item'       => __( 'Add New ' . $post_type_label . ' Item', 'd3fy-portfolio' ),
+			'edit_item'          => __( 'Edit ' . $post_type_label . ' Item', 'd3fy-portfolio' ),
+			'new_item'           => __( 'Add New ' . $post_type_label . ' Item', 'd3fy-portfolio' ),
+			'view_item'          => __( 'View Item', 'd3fy-portfolio' ),
+			'search_items'       => __( 'Search ' . $post_type_label . '', 'd3fy-portfolio' ),
+			'not_found'          => __( 'No ' . $post_type_label . ' items found', 'd3fy-portfolio' ),
+			'not_found_in_trash' => __( 'No ' . $post_type_label . ' items found in trash', 'd3fy-portfolio' ),
+		);
+
+		$supports = array(
+			'title',
+			'editor',
+			'thumbnail',
+		);
+
+		$args = array(
+			'labels'          => $labels,
+			'supports'        => $supports,
+			'public'          => true,
+			'capability_type' => 'post',
+			'rewrite'         => array( 'slug' => 'portfolio-item', ),
+			'menu_position'   => 5,
+			'menu_icon'       => ( version_compare( $GLOBALS['wp_version'], '3.8', '>=' ) ) ? 'dashicons-portfolio' : '',
+			'has_archive'     => false,
+		);
+
+		$args = apply_filters( 'd3fy_posttype_args', $args );
+
+		register_post_type( $post_type_slug, $args );
+
+	}
+
+	/**
+	 * Register taxonomy for portfolio custom post type.
+	 *
+	 * @since 1.1.0
+	 */
+	public function register_taxonomy_category() {
+		$labels = array(
+			'name'                       => __( $this->post_type_label . ' Categories', 'd3fy-portfolio' ),
+			'singular_name'              => __( $this->post_type_label . ' Category', 'd3fy-portfolio' ),
+			'menu_name'                  => __( $this->post_type_label . ' Categories', 'd3fy-portfolio' ),
+			'edit_item'                  => __( 'Edit ' . $this->post_type_label . ' Category', 'd3fy-portfolio' ),
+			'update_item'                => __( 'Update ' . $this->post_type_label . ' Category', 'd3fy-portfolio' ),
+			'add_new_item'               => __( 'Add New ' . $this->post_type_label . ' Category', 'd3fy-portfolio' ),
+			'new_item_name'              => __( 'New ' . $this->post_type_label . ' Category Name', 'd3fy-portfolio' ),
+			'parent_item'                => __( 'Parent ' . $this->post_type_label . ' Category', 'd3fy-portfolio' ),
+			'parent_item_colon'          => __( 'Parent ' . $this->post_type_label . ' Category:', 'd3fy-portfolio' ),
+			'all_items'                  => __( 'All ' . $this->post_type_label . ' Categories', 'd3fy-portfolio' ),
+			'search_items'               => __( 'Search ' . $this->post_type_label . ' Categories', 'd3fy-portfolio' ),
+			'popular_items'              => __( 'Popular ' . $this->post_type_label . ' Categories', 'd3fy-portfolio' ),
+			'separate_items_with_commas' => __( 'Separate Portfolio categories with commas', 'd3fy-portfolio' ),
+			'add_or_remove_items'        => __( 'Add or remove Portfolio categories', 'd3fy-portfolio' ),
+			'choose_from_most_used'      => __( 'Choose from the most used Portfolio categories', 'd3fy-portfolio' ),
+			'not_found'                  => __( 'No Portfolio categories found.', 'd3fy-portfolio' ),
+		);
+
+		$args = array(
+			'labels'            => $labels,
+			'public'            => true,
+			'show_in_nav_menus' => true,
+			'show_ui'           => true,
+			'show_tagcloud'     => true,
+			'hierarchical'      => true,
+			'rewrite'           => array( 'slug' => 'portfolio-category' ),
+			'show_admin_column' => true,
+			'query_var'         => true,
+		);
+
+		$args = apply_filters( 'd3fy_posttype_category_args', $args );
+
+		register_taxonomy( 'd3fy_portfolio_category', $this->post_type_slug, $args );
+	}
+
+	/**
+	 * Registers a featured post metabox
+	 */
+	public function register_meta() {
+		add_meta_box( 'd3fy_portfolio_meta', __( 'Featured Posts', 'd3fy-portfolio' ), array( $this, 'register_meta_callback' ), 'd3fy_portfolio', 'normal', 'high' );
+	}
+
+	/**
+	 * Output checkbox form.
+	 *
+	 * @param $post
+	 */
+	public function register_meta_callback ( $post ) {
+
+		wp_nonce_field( basename( __FILE__ ), 'd3fy_portfolio_nonce' );
+		$stored_meta = get_post_meta( $post->ID );
+		$checked     = isset ( $stored_meta['featured-checkbox'] ) ? checked( $stored_meta['featured-checkbox'][0], 'yes' ) : '';
+		?>
+		<p>
+			<span class="d3fy-portfolio-row-title"><?php _e( 'Check if this is a featured post: ', 'd3fy-portfolio' ) ?></span>
+			<div class="d3fy-portfolio-row-content">
+				<label for="featured-checkbox">
+					<input type="checkbox" name="featured-checkbox" id="featured-checkbox" value="yes" <?php echo $checked ?>/>
+					<?php _e( 'Featured Item', 'd3fy-portfolio' ) ?>
+				</label>
+			</div>
+		</p>
+		<?php
+
+	}
+
+	/**
+	 * Save meta.
+	 *
+	 * @param int $post_id Post to save meta values.
+	 */
+	public function meta_save( $post_id ) {
+
+		// Checks save status - overcome autosave, etc.
+		$is_autosave    = wp_is_post_autosave( $post_id );
+		$is_revision    = wp_is_post_revision( $post_id );
+		$is_valid_nonce = ( isset( $_POST['d3fy_portfolio_nonce'] ) && wp_verify_nonce( $_POST['d3fy_portfolio_nonce'], basename( __FILE__ ) ) ) ? 'true' : 'false';
+
+		// Exits script depending on save status
+		if ( $is_autosave || $is_revision || ! $is_valid_nonce ) {
+			return;
+		}
+
+		// Checks for input and saves - save checked as yes and unchecked at no
+		$state = isset( $_POST['featured-checkbox'] ) ? 'yes' : 'no';
+		update_post_meta( $post_id, 'featured-checkbox', $state );
 
 	}
 
