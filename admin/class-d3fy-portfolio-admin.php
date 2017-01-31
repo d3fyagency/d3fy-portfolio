@@ -128,9 +128,13 @@ class D3fy_Portfolio_Admin {
 	 */
 	public function register_post_type() {
 
+		// Bail if portfolio post type exists
+		if ( post_type_exists( 'portfolio' ) ) {
+			return false;
+		}
+
 		$post_type_slug = 'd3fy_portfolio';
 		$post_type_label = 'Portfolio';
-
 
 		$labels = array(
 			'name'               => __( $post_type_label, 'd3fy-portfolio' ),
@@ -174,6 +178,18 @@ class D3fy_Portfolio_Admin {
 	 * @since 1.1.0
 	 */
 	public function register_taxonomy_category() {
+
+		// Bail if portfolio taxonomies exist
+		$args = array(
+			'public' => true,
+		);
+		$taxonomies = get_taxonomies( $args );
+		foreach ( $taxonomies as $taxonomy ) {
+			if ( stristr( $taxonomy, 'portfolio' ) ) {
+				return false;
+			}
+		}
+
 		$labels = array(
 			'name'                       => __( $this->post_type_label . ' Categories', 'd3fy-portfolio' ),
 			'singular_name'              => __( $this->post_type_label . ' Category', 'd3fy-portfolio' ),
@@ -209,5 +225,4 @@ class D3fy_Portfolio_Admin {
 
 		register_taxonomy( 'd3fy_portfolio_category', $this->post_type_slug, $args );
 	}
-
 }
