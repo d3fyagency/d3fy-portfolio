@@ -31,6 +31,23 @@ class D3fy_Portfolio_Deactivator {
 	 */
 	public static function deactivate() {
 
+		if ( is_multisite() ) {
+
+			if ( wp_is_large_network() ) {
+				return;
+			}
+
+			$sites = get_sites( array( 'number' => 1000 ) );
+			foreach ( $sites as $site ) {
+				switch_to_blog( $site->blog_id );
+				delete_option( 'rewrite_rules' );
+				restore_current_blog();
+			}
+
+		} else {
+			flush_rewrite_rules();
+		}
+
 	}
 
 }
